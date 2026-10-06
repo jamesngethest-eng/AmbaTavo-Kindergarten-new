@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ambotavo-kindergarten
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+      - key: WA_TOKEN
+        sync: false
+      - key: WA_PHONE_ID
+        sync: false
+      - key: WA_TEMPLATE
+        value: login_code
+      - key: WA_LANG
+        value: en_US
+    disk:
+      name: ambotavo-data
+      mountPath: /var/data
+      sizeGB: 1

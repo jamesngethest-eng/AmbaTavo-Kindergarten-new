@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="AmboTavo Kindergarten — a calm, child-led Montessori learning environment."><meta name="theme-color" content="#28533e"><title>AmboTavo Kindergarten | Montessori Way Road</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=Young+Serif&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
+<header class="top"><a class="brand" href="/"><i></i><span data-k="name"></span></a>
+<nav><a href="#about">Our approach</a><a href="#gallery">Gallery</a><a href="#visit">Visit us</a><a href="/portal.html">Parent &amp; staff portal</a></nav>
+<a class="btn wa" data-wa href="#" rel="noopener">Chat on WhatsApp</a></header>
+<main><div class="wrap hero"><div><p data-k="tagline" style="font-weight:600;color:var(--blue)"></p><h1 data-k="heroTitle"></h1><p data-k="heroText" style="max-width:52ch"></p>
+<p><a class="btn" href="#visit">Book a school visit</a> <a class="btn ghost" data-wa href="#">Ask us on WhatsApp</a></p></div><div class="ph" data-img="img_hero" role="img" aria-label="Children working in a Montessori classroom"></div></div>
+<section class="alt" id="about"><div class="wrap two"><div class="ph" data-img="img_about" role="img" aria-label="Montessori materials on a shelf"></div><div><h2 data-k="aboutTitle"></h2><p data-k="aboutText"></p></div></div></section>
+<section><div class="wrap"><h2>What your child will do</h2><div class="three">
+<div class="card"><h3 data-k="prog1t"></h3><p data-k="prog1x"></p></div><div class="card"><h3 data-k="prog2t"></h3><p data-k="prog2x"></p></div><div class="card"><h3 data-k="prog3t"></h3><p data-k="prog3x"></p></div></div></div></section>
+<section class="alt" id="gallery"><div class="wrap"><h2>Life at school</h2><div class="gal"><div class="ph" data-img="img_g1"></div><div class="ph" data-img="img_g2"></div><div class="ph" data-img="img_g3"></div></div></div></section>
+<section id="visit"><div class="wrap two"><div><h2>Come and see a classroom at work</h2>
+<p><b>Address:</b> <span data-k="address"></span><br><b>Hours:</b> <span data-k="hours"></span><br><b>Phone:</b> <a data-phone href="#"><span data-k="phone"></span></a><br><b>Email:</b> <a data-email href="#"><span data-k="email"></span></a></p>
+<p><a class="btn wa" data-wa href="#">Message us on WhatsApp</a></p></div>
+<form class="card" id="enq"><h3>Send an enquiry</h3><label for="n">Your name</label><input id="n" required><label for="c">Phone or email</label><input id="c" required>
+<label for="m">Message</label><textarea id="m" rows="3" placeholder="Child's age, preferred start date…"></textarea><p><button class="btn">Send enquiry</button></p><p class="msg" id="em" role="status"></p></form></div></section></main>
+<footer>&copy; <span data-k="name"></span> · <span data-k="address"></span></footer>
+<script>
+fetch('/api/content').then(r=>{if(!r.ok)throw new Error('Could not load website settings');return r.json()}).then(c=>{
+ document.querySelectorAll('[data-k]').forEach(e=>e.textContent=c[e.dataset.k]||'');
+ document.querySelectorAll('[data-img]').forEach(e=>{const u=c[e.dataset.img];if(u)e.style.backgroundImage=`url("${u}")`;else e.classList.add('empty')});
+ document.querySelectorAll('[data-wa]').forEach(a=>a.href=`https://wa.me/${c.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(c.waGreeting)}`);
+ document.querySelector('[data-phone]').href='tel:'+c.phone.replace(/[^+\d]/g,'');
+ document.querySelector('[data-email]').href='mailto:'+c.email;
+ document.title=c.name+' | '+c.address}).catch(err=>console.error(err));
+const form=$('#enq');
+form.onsubmit=async e=>{e.preventDefault();const r=await fetch('/api/enquiry',{method:'POST',body:JSON.stringify({name:document.querySelector('#n').value,contact:document.querySelector('#c').value,message:document.querySelector('#m').value})});
+ em.className='msg '+(r.ok?'okc':'err');em.textContent=r.ok?'Thank you. We will contact you soon.':(await r.json()).error;if(r.ok)enq.reset()};
+</script></body></html>
