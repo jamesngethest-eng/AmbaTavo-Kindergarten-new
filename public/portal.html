@@ -1,6 +1,6 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="AmboTavo Kindergarten family and staff portal"><meta name="theme-color" content="#28533e"><title>Portal | AmboTavo Kindergarten</title>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=Young+Serif&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
-<header class="top"><a class="brand" href="/"><i></i>AmboTavo</a><div><span id="who"></span> <button class="btn sm ghost" id="out" hidden>Sign out</button></div></header>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Ambatsavo Kindergarten family and staff portal"><meta name="theme-color" content="#28533e"><title>Portal | Ambatsavo Kindergarten</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=Young+Serif&display=swap" rel="stylesheet"><link rel="icon" href="/img/favicon.png"><link rel="stylesheet" href="style.css"></head><body>
+<header class="top"><a class="brand" href="/"><img class="logo" src="/img/logo.jpg" alt="">Ambatsavo</a><div><span id="who"></span> <button class="btn sm ghost" id="out" hidden>Sign out</button></div></header>
 <main class="wrap portal" id="app" aria-live="polite"></main>
 <script>
 const $=s=>document.querySelector(s);let T=localStorage.tk,U=null,C={};
@@ -11,28 +11,36 @@ const say=(id,t,bad)=>{const e=$('#'+id);e.textContent=t;e.className='msg '+(bad
 function out(){localStorage.removeItem('tk');location.reload()}$('#out').onclick=out;
 async function boot(){try{U=await api('me');C=await (await fetch('/api/content')).json();$('#who').textContent=U.name+' ('+U.role+')';$('#out').hidden=false;
  U.role==='admin'?location.replace('/admin.html'):U.role==='teacher'?teacher():parent()}catch{login()}}
-function login(){$('#app').innerHTML=`<div class="card" style="max-width:440px;margin:40px auto"><h2>Sign in</h2>
-<div class="tabs"><button class="btn on" id="t1">Password</button><button class="btn" id="t2">WhatsApp code</button></div>
-<form id="f1"><label for="e">Email</label><input id="e" type="email" required><label for="p">Password</label><input id="p" type="password" required><p><button class="btn">Sign in</button></p></form>
-<form id="f2" hidden><label for="ph">WhatsApp number (with country code)</label><input id="ph" type="tel" placeholder="254700000003" required><p><button class="btn wa">Send me a code</button></p>
-<div id="cd" hidden><label for="cc">6-digit code</label><input id="cc" inputmode="numeric" maxlength="6"><p><button class="btn" type="button" id="vb">Verify and sign in</button></p></div></form><p class="msg" id="lm" role="status"></p></div>`;
- $('#t1').onclick=()=>{f1.hidden=false;f2.hidden=true;t1.classList.add('on');t2.classList.remove('on')};$('#t2').onclick=()=>{f2.hidden=false;f1.hidden=true;t2.classList.add('on');t1.classList.remove('on')};
- const done=d=>{localStorage.tk=T=d.token;boot()};
- f1.onsubmit=async x=>{x.preventDefault();try{done(await api('login','POST',{email:e.value,password:p.value}))}catch(er){say('lm',er.message,1)}};
- f2.onsubmit=async x=>{x.preventDefault();try{const d=await api('otp/request','POST',{phone:ph.value});cd.hidden=false;say('lm',d.message)}catch(er){say('lm',er.message,1)}};
- vb.onclick=async()=>{try{done(await api('otp/verify','POST',{phone:ph.value,code:cc.value}))}catch(er){say('lm',er.message,1)}}}
+function login(v=location.hash==='#signup'?'up':'in'){
+const H2={in:'Sign in',wa:'Sign in with a WhatsApp code',up:'Create a parent account',fp:'Reset your password'},tab=(k,x)=>`<button class="btn${v===k?' on':''}" data-v="${k}">${x}</button>`;
+$('#app').innerHTML=`<div class="card" style="max-width:460px;margin:40px auto"><h2>${H2[v]}</h2><div class="tabs">${tab('in','Password')}${tab('wa','WhatsApp code')}${tab('up','Sign up')}</div><div id="fm"></div><p class="msg" id="lm" role="status"></p></div>`;
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>login(b.dataset.v));
+const done=d=>{localStorage.tk=T=d.token;boot()},M=(x,bad)=>say('lm',x,bad),V={
+in:`<form id="f1"><label for="e">Email or phone number</label><input id="e" autocomplete="username" required><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required><p><button class="btn">Sign in</button> <a href="#" id="fg">Forgot password?</a></p></form>`,
+wa:`<form id="f2"><label for="ph">WhatsApp number</label><input id="ph" type="tel" placeholder="0712 345 678" required><p><button class="btn wa">Send me a code</button></p><div id="cd" hidden><label for="cc">6-digit code</label><input id="cc" inputmode="numeric" maxlength="6"><p><button class="btn" type="button" id="vb">Verify and sign in</button></p></div></form>`,
+up:`<form id="fs"><label for="sn">Your name</label><input id="sn" required maxlength="80" autocomplete="name"><label for="sp">WhatsApp number</label><input id="sp" type="tel" placeholder="0712 345 678" required><label for="se">Email</label><input id="se" type="email" required autocomplete="email"><label for="sw">Password (8+ characters)</label><input id="sw" type="password" minlength="8" required autocomplete="new-password"><p><button class="btn">Create account</button></p><p class="meta">The school office approves each new account to keep children's photos private.</p></form>`,
+fp:`<form id="fr"><label for="rp">WhatsApp number on your account</label><input id="rp" type="tel" placeholder="0712 345 678" required><p><button class="btn wa">Send me a code</button></p><div id="rc" hidden><label for="rk">6-digit code</label><input id="rk" inputmode="numeric" maxlength="6"><label for="rn">New password (8+ characters)</label><input id="rn" type="password" minlength="8" autocomplete="new-password"><p><button class="btn" type="button" id="rb">Save new password</button></p></div><p><a href="#" id="bk">&larr; Back to sign in</a></p></form>`};
+$('#fm').innerHTML=V[v];
+if(v==='in'){$('#f1').onsubmit=async x=>{x.preventDefault();try{done(await api('login','POST',{email:$('#e').value,password:$('#p').value}))}catch(er){M(er.message,1)}};$('#fg').onclick=x=>{x.preventDefault();login('fp')}}
+if(v==='wa'){$('#f2').onsubmit=async x=>{x.preventDefault();try{const d=await api('otp/request','POST',{phone:$('#ph').value});$('#cd').hidden=false;M(d.message)}catch(er){M(er.message,1)}};
+ $('#vb').onclick=async()=>{try{done(await api('otp/verify','POST',{phone:$('#ph').value,code:$('#cc').value}))}catch(er){M(er.message,1)}}}
+if(v==='up')$('#fs').onsubmit=async x=>{x.preventDefault();try{await api('signup','POST',{name:$('#sn').value,phone:$('#sp').value,email:$('#se').value,password:$('#sw').value});$('#fs').reset();M('Thank you! Your account is waiting for approval by the school office. You can sign in once it is approved.')}catch(er){M(er.message,1)}};
+if(v==='fp'){$('#bk').onclick=x=>{x.preventDefault();login('in')};$('#fr').onsubmit=async x=>{x.preventDefault();try{const d=await api('password/request','POST',{phone:$('#rp').value});$('#rc').hidden=false;M(d.message)}catch(er){M(er.message,1)}};
+ $('#rb').onclick=async()=>{try{await api('password/reset','POST',{phone:$('#rp').value,code:$('#rk').value,password:$('#rn').value});M('Password changed. You can now sign in with your new password.');setTimeout(()=>login('in'),1800)}catch(er){M(er.message,1)}}}}
+const pwCard=`<form class="card" id="pwf" style="margin-top:34px;max-width:460px"><h3>Change my password</h3><label for="pc">Current password</label><input id="pc" type="password" required><label for="pn">New password (8+ characters)</label><input id="pn" type="password" minlength="8" required><p><button class="btn">Change password</button></p><p class="msg" id="pwm" role="status"></p></form>`;
+function wirePw(){$('#pwf').onsubmit=async x=>{x.preventDefault();try{await api('password/change','POST',{current:$('#pc').value,password:$('#pn').value});$('#pwf').reset();say('pwm','Password changed.')}catch(er){say('pwm',er.message,1)}}}
 const postCard=(p,can)=>`<article class="card post"><div class="meta">${new Date(p.at).toLocaleDateString()} · ${esc(p.author)}</div><h3>${esc(p.title)}</h3><p>${esc(p.body)}</p>
 ${p.media?(p.kind==='video'?`<video controls src="${esc(p.media)}"></video>`:`<img alt="" src="${esc(p.media)}">`):''}${can?`<button class="btn sm del" data-del="${p.id}">Remove</button>`:''}</article>`;
 async function feed(can,el){const ps=await api('posts');el.innerHTML=ps.map(p=>postCard(p,can&&(U.role==='admin'||p.author===U.name))).join('')||'<p>No updates yet.</p>';
  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(confirm('Remove this update?')){await api('posts/'+b.dataset.del,'DELETE');feed(can,el)}})}
 async function community(){const d=await api('community');$('#cm').innerHTML=d.items.map(a=>`<article class="card post"><div class="meta">${new Date(a.at).toLocaleDateString()} · ${esc(a.author)}</div><h3>${esc(a.title)}</h3><p>${esc(a.body)}</p>${a.media?`<img alt="" src="${esc(a.media)}">`:''}<div class="stk">${d.stickers.map(s=>`<button class="stk-b${a.mine.includes(s)?' on':''}" data-a="${a.id}" data-s="${s}" aria-pressed="${a.mine.includes(s)}">${s}<span>${a.counts[s]||''}</span></button>`).join('')}</div></article>`).join('')||'<p>No announcements yet.</p>';
  document.querySelectorAll('.stk-b').forEach(b=>b.onclick=async()=>{try{await api('community/'+b.dataset.a+'/react','POST',{sticker:b.dataset.s});community()}catch(er){alert(er.message)}})}
-function parent(){$('#app').innerHTML='<h1>Community</h1><p class="meta">Tap a sticker to react to an announcement.</p><div id="cm"></div><h2 style="margin-top:34px">News from the classroom</h2><div id="fd"></div>';community();feed(false,$('#fd'))}
+function parent(){$('#app').innerHTML='<h1>Community</h1><p class="meta">Tap a sticker to react to an announcement.</p><div id="cm"></div><h2 style="margin-top:34px">News from the classroom</h2><div id="fd"></div>'+pwCard;community();feed(false,$('#fd'));wirePw()}
 const composer=`<form class="card" id="pf"><h3>Share an update</h3><label for="pt">Title</label><input id="pt" required maxlength="120"><label for="pb">Message</label><textarea id="pb" rows="3"></textarea>
 <label for="pm">Photo or video (optional)</label><input id="pm" type="file" accept="image/*,video/*"><p><button class="btn">Share with families</button></p><p class="msg" id="pm2" role="status"></p></form><div id="fd" style="margin-top:20px"></div>`;
 function wireComposer(){pf.onsubmit=async x=>{x.preventDefault();try{let m='',k='note',f=pm.files[0];
  if(f){m=(await up(f)).url;k=f.type.startsWith('video')?'video':'image'}await api('posts','POST',{title:pt.value,body:pb.value,media:m,kind:k});pf.reset();say('pm2','Shared with families.');feed(true,$('#fd'))}catch(er){say('pm2',er.message,1)}};feed(true,$('#fd'))}
 const up=f=>fetch('/api/upload',{method:'POST',headers:{Authorization:'Bearer '+T,'x-filename':f.name},body:f}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);return d});
-function teacher(){$('#app').innerHTML='<h1>Teacher studio</h1>'+composer+'<h2 style="margin-top:34px">Community</h2><div id="cm"></div>';wireComposer();community()}
+function teacher(){$('#app').innerHTML='<h1>Teacher studio</h1>'+composer+'<h2 style="margin-top:34px">Community</h2><div id="cm"></div>'+pwCard;wireComposer();community();wirePw()}
 boot();
 </script></body></html>

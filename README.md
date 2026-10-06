@@ -1,4 +1,4 @@
-# AmboTavo Kindergarten
+# Ambatsavo Kindergarten
 
 A responsive Montessori kindergarten website with a secure school portal for administrators, teachers and parents.
 
@@ -48,3 +48,7 @@ Admins now sign in at `/portal.html` and are sent to `/admin.html` ("School offi
 ## Community (v1.3)
 
 Admins post announcements in **School office → Community** (title, message, optional photo; edit, change photo or delete). Parents and teachers see them in the portal and can only react with stickers (one tap to add or remove each sticker). The pictures in `public/img/` are now real photos (`school.jpg`, `classroom.jpg`, `bus.jpg`).
+
+## Sign-up and password reset (v1.4)
+
+Parents create accounts at `/portal.html#signup` (name, WhatsApp number, email, password). New accounts are **pending** until an admin approves them under School office → Accounts (this keeps children's photos private). Parents can sign in with email or phone. **Forgot password** sends a 6-digit WhatsApp code (10 minutes) so they can choose a new password; signed-in users can also change it from the portal. Phone numbers beginning with `0` are treated as Kenyan (`07..` becomes `2547..`). The school name is now **Ambatsavo**; an existing database is renamed automatically on start-up.

@@ -1,8 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="AmboTavo Kindergarten — a calm, child-led Montessori learning environment."><meta name="theme-color" content="#28533e"><title>AmboTavo Kindergarten | Montessori Way Road</title>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=Young+Serif&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
-<header class="top"><a class="brand" href="/"><i></i><span data-k="name"></span></a>
-<nav><a href="#about">Our approach</a><a href="#community">Community</a><a href="#gallery">Gallery</a><a href="#visit">Visit us</a><a href="/portal.html">Parent &amp; staff portal</a></nav>
+<meta name="description" content="Ambatsavo Kindergarten — a calm, child-led Montessori learning environment."><meta name="theme-color" content="#28533e"><title>Ambatsavo Kindergarten | Montessori Way Road</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=Young+Serif&display=swap" rel="stylesheet"><link rel="icon" href="/img/favicon.png"><link rel="stylesheet" href="style.css"></head><body>
+<header class="top"><a class="brand" href="/"><img class="logo" src="/img/logo.jpg" alt=""><span data-k="name"></span></a>
+<nav><a href="#about">Our approach</a><a href="#community">Community</a><a href="#gallery">Gallery</a><a href="#visit">Visit us</a><a href="/portal.html">Parent &amp; staff portal</a><a href="/portal.html#signup">Parent sign up</a></nav>
 <a class="btn wa" data-wa href="#" rel="noopener">Chat on WhatsApp</a></header>
 <main><div class="wrap hero"><div><p data-k="tagline" style="font-weight:600;color:var(--blue)"></p><h1 data-k="heroTitle"></h1><p data-k="heroText" style="max-width:52ch"></p>
 <p><a class="btn" href="#visit">Book a school visit</a> <a class="btn ghost" data-wa href="#">Ask us on WhatsApp</a></p></div><div class="ph" data-img="img_hero" data-def="/img/school.jpg" role="img" aria-label="Aerial view of the school"></div></div>
@@ -22,7 +22,7 @@ fetch('/api/content').then(r=>{if(!r.ok)throw new Error('Could not load website 
  document.querySelectorAll('[data-k]').forEach(e=>e.textContent=c[e.dataset.k]||'');
  document.querySelectorAll('[data-img]').forEach(e=>{const u=c[e.dataset.img]||e.dataset.def;if(u)e.style.backgroundImage=`url("${u}")`;else e.classList.add('empty')});
  document.querySelectorAll('[data-wa]').forEach(a=>a.href=`https://wa.me/${c.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(c.waGreeting)}`);
- let g=[];try{g=JSON.parse(c.gallery||'')}catch{}if(!Array.isArray(g))g=[];if(!c.gallery)g=[c.img_g1,c.img_g2,c.img_g3].filter(Boolean);if(!g.length)g=['/img/bus.jpg','/img/school.jpg','/img/classroom.jpg'];
+ let g=[];try{g=JSON.parse(c.gallery||'')}catch{}if(!Array.isArray(g))g=[];if(!c.gallery)g=[c.img_g1,c.img_g2,c.img_g3].filter(Boolean);if(!g.length)g=['/img/library.jpg','/img/school.jpg','/img/classroom.jpg','/img/bus.jpg'];
  document.querySelector('#gal').innerHTML=g.map(u=>`<div class="ph" style="background-image:url('${String(u).replace(/'/g,'%27')}')"></div>`).join('');
  document.querySelector('[data-phone]').href='tel:'+c.phone.replace(/[^+\d]/g,'');
  document.querySelector('[data-email]').href='mailto:'+c.email;
