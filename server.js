@@ -25,8 +25,11 @@ let db=fs.existsSync(DB)?JSON.parse(fs.readFileSync(DB)):{
  {id:id(),name:'Parent Demo',email:'parent@ambotavo.school',phone:'254700000003',role:'parent',pw:H('Parent123!')}],
  posts:[{id:id(),title:'Welcome to AmboTavo',body:'Our first updates will appear here. Teachers can share notes, photos and videos with families.',kind:'note',media:'',author:'AmboTavo team',at:Date.now()}],enquiries:[]};
 const save=()=>{const tmp=DB+'.tmp';fs.writeFileSync(tmp,JSON.stringify(db,null,1));fs.renameSync(tmp,DB)};
-const NEWC={gallery:'',img_buses:'',busTitle:'Safe school transport',busText:'Our school buses carry the AmboTavo Kindergarten name and bring children to and from school. Ask us about routes and pick-up times.'};
+const NEWC={gallery:'',img_buses:'',busTitle:'',busText:'',communityTitle:'Our school community',communityText:'Announcements and news for our families, all in one place. Sign in to read the latest posts and react with a sticker.'};
 for(const k in NEWC)if(!(k in db.content))db.content[k]=NEWC[k];
+for(const k in db.content)if(typeof db.content[k]==='string')db.content[k]=db.content[k].split('/img/school.svg').join('/img/school.jpg').split('/img/buses.svg').join('/img/bus.jpg');
+db.community=db.community||[];
+const rmUp=u=>{const mm=String(u||'').match(/^\/uploads\/([\w-]+\.\w+)$/);if(mm)try{fs.unlinkSync(path.join(D,'uploads',mm[1]))}catch{}};
 save();
 const sess=new Map(),otps=new Map();
 const SESSION_MS=1000*60*60*12;
@@ -77,6 +80,19 @@ http.createServer(async(q,s)=>{
   if(p.startsWith('/api/posts/')&&m==='DELETE'){if(!need('teacher','admin'))return;const x=db.posts.find(v=>v.id===p.slice(11));
    if(x&&(me.role==='admin'||x.author===me.name)){db.posts=db.posts.filter(v=>v!==x);save();return J(200,{ok:true})}return J(403,{error:'Not allowed'})}
   if(p==='/api/enquiry'&&m==='POST'){if(!b.name||!b.contact)return J(400,{error:'Name and contact are required'});db.enquiries.push({id:id(),name:String(b.name).slice(0,100),contact:String(b.contact).slice(0,100),message:String(b.message||'').slice(0,1000),at:Date.now()});save();return J(200,{ok:true})}
+  const ST=['❤️','👏','😊','🎉','🌟','🙏'];
+  const cv=(a,uid)=>({id:a.id,title:a.title,body:a.body,media:a.media,at:a.at,author:a.author,counts:Object.fromEntries(ST.map(t=>[t,(a.r[t]||[]).length])),mine:ST.filter(t=>(a.r[t]||[]).includes(uid))});
+  if(p==='/api/community'&&m==='GET')return need()&&J(200,{stickers:ST,items:db.community.slice().sort((a,c)=>c.at-a.at).map(a=>cv(a,me.id))});
+  if(p==='/api/community'&&m==='POST'){if(!need('admin'))return;if(!String(b.title||'').trim())return J(400,{error:'A title is required'});
+   const x={id:id(),title:String(b.title).slice(0,120),body:String(b.body||'').slice(0,2000),media:String(b.media||''),author:me.name,at:Date.now(),r:{}};db.community.push(x);save();return J(200,cv(x,me.id))}
+  const cm=p.match(/^\/api\/community\/([\w-]+)(\/react)?$/);
+  if(cm){const x=db.community.find(v=>v.id===cm[1]);
+   if(cm[2]&&m==='POST'){if(!need())return;if(!x)return J(404,{error:'Not found'});if(!ST.includes(b.sticker))return J(400,{error:'Unknown sticker'});
+    const a=x.r[b.sticker]=x.r[b.sticker]||[],i=a.indexOf(me.id);i<0?a.push(me.id):a.splice(i,1);save();return J(200,cv(x,me.id))}
+   if(!cm[2]&&m==='PUT'){if(!need('admin'))return;if(!x)return J(404,{error:'Not found'});
+    if('title' in b){if(!String(b.title).trim())return J(400,{error:'A title is required'});x.title=String(b.title).slice(0,120)}
+    if('body' in b)x.body=String(b.body).slice(0,2000);if('media' in b&&b.media!==x.media){rmUp(x.media);x.media=String(b.media)}save();return J(200,cv(x,me.id))}
+   if(!cm[2]&&m==='DELETE'){if(!need('admin'))return;if(x){rmUp(x.media);db.community=db.community.filter(v=>v!==x);save()}return J(200,{ok:true})}}
   if(p==='/api/enquiries'&&m==='GET')return need('admin')&&J(200,db.enquiries.sort((a,c)=>c.at-a.at));
   if(p.startsWith('/api/enquiries/')&&m==='DELETE'){if(!need('admin'))return;db.enquiries=db.enquiries.filter(v=>v.id!==p.slice(15));save();return J(200,{ok:true})}
   if(p==='/api/users'&&m==='GET')return need('admin')&&J(200,db.users.map(pub));

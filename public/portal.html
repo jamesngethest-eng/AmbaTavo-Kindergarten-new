@@ -25,12 +25,14 @@ const postCard=(p,can)=>`<article class="card post"><div class="meta">${new Date
 ${p.media?(p.kind==='video'?`<video controls src="${esc(p.media)}"></video>`:`<img alt="" src="${esc(p.media)}">`):''}${can?`<button class="btn sm del" data-del="${p.id}">Remove</button>`:''}</article>`;
 async function feed(can,el){const ps=await api('posts');el.innerHTML=ps.map(p=>postCard(p,can&&(U.role==='admin'||p.author===U.name))).join('')||'<p>No updates yet.</p>';
  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(confirm('Remove this update?')){await api('posts/'+b.dataset.del,'DELETE');feed(can,el)}})}
-function parent(){$('#app').innerHTML='<h1>News from the classroom</h1><div id="fd"></div>';feed(false,$('#fd'))}
+async function community(){const d=await api('community');$('#cm').innerHTML=d.items.map(a=>`<article class="card post"><div class="meta">${new Date(a.at).toLocaleDateString()} · ${esc(a.author)}</div><h3>${esc(a.title)}</h3><p>${esc(a.body)}</p>${a.media?`<img alt="" src="${esc(a.media)}">`:''}<div class="stk">${d.stickers.map(s=>`<button class="stk-b${a.mine.includes(s)?' on':''}" data-a="${a.id}" data-s="${s}" aria-pressed="${a.mine.includes(s)}">${s}<span>${a.counts[s]||''}</span></button>`).join('')}</div></article>`).join('')||'<p>No announcements yet.</p>';
+ document.querySelectorAll('.stk-b').forEach(b=>b.onclick=async()=>{try{await api('community/'+b.dataset.a+'/react','POST',{sticker:b.dataset.s});community()}catch(er){alert(er.message)}})}
+function parent(){$('#app').innerHTML='<h1>Community</h1><p class="meta">Tap a sticker to react to an announcement.</p><div id="cm"></div><h2 style="margin-top:34px">News from the classroom</h2><div id="fd"></div>';community();feed(false,$('#fd'))}
 const composer=`<form class="card" id="pf"><h3>Share an update</h3><label for="pt">Title</label><input id="pt" required maxlength="120"><label for="pb">Message</label><textarea id="pb" rows="3"></textarea>
 <label for="pm">Photo or video (optional)</label><input id="pm" type="file" accept="image/*,video/*"><p><button class="btn">Share with families</button></p><p class="msg" id="pm2" role="status"></p></form><div id="fd" style="margin-top:20px"></div>`;
 function wireComposer(){pf.onsubmit=async x=>{x.preventDefault();try{let m='',k='note',f=pm.files[0];
  if(f){m=(await up(f)).url;k=f.type.startsWith('video')?'video':'image'}await api('posts','POST',{title:pt.value,body:pb.value,media:m,kind:k});pf.reset();say('pm2','Shared with families.');feed(true,$('#fd'))}catch(er){say('pm2',er.message,1)}};feed(true,$('#fd'))}
 const up=f=>fetch('/api/upload',{method:'POST',headers:{Authorization:'Bearer '+T,'x-filename':f.name},body:f}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);return d});
-function teacher(){$('#app').innerHTML='<h1>Teacher studio</h1>'+composer;wireComposer()}
+function teacher(){$('#app').innerHTML='<h1>Teacher studio</h1>'+composer+'<h2 style="margin-top:34px">Community</h2><div id="cm"></div>';wireComposer();community()}
 boot();
 </script></body></html>

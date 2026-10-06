@@ -7,3 +7,4 @@ section{padding:72px 0}.alt{background:#fff;border-block:1px solid var(--line)}.
 @media(max-width:900px){nav{order:3;width:100%;justify-content:center;overflow:auto;padding-bottom:2px}header.top{position:static}.hero{padding-top:45px;gap:30px}.hero .ph{min-height:350px}}
 @media(max-width:760px){.hero,.two,.three,.gal,.grid2{grid-template-columns:1fr}.hero{padding-top:32px}.hero .ph{min-height:280px}.gal .ph{min-height:200px}.wrap{padding-inline:18px}.top .wa{display:none}section{padding:52px 0}}
 @media(prefers-reduced-motion:no-preference){.btn{transition:transform .15s,background .15s}.btn:hover{transform:translateY(-2px)}}
+.stk{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.stk-b{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.3em .85em;font-size:1.2rem;cursor:pointer}.stk-b.on{background:#eaf3ed;border-color:var(--moss)}.stk-b span{font-size:.85rem;font-weight:700;color:var(--muted);margin-left:2px}

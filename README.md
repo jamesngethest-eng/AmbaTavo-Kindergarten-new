@@ -44,3 +44,7 @@ This project stores application data in a JSON file. The included persistent dis
 ## Admin page (v1.2)
 
 Admins now sign in at `/portal.html` and are sent to `/admin.html` ("School office"). Every website field has its own **Save** and **Delete** buttons, photos have **Change photo**, and the **Gallery** tab lets you add, change and delete pictures. The default pictures in `public/img/` (school building and two school buses with the school name) are illustrations; upload real photos from the admin page any time. Existing `data.json` files are upgraded automatically on start-up and nothing is overwritten.
+
+## Community (v1.3)
+
+Admins post announcements in **School office → Community** (title, message, optional photo; edit, change photo or delete). Parents and teachers see them in the portal and can only react with stickers (one tap to add or remove each sticker). The pictures in `public/img/` are now real photos (`school.jpg`, `classroom.jpg`, `bus.jpg`).
