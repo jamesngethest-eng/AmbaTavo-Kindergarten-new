@@ -25,7 +25,9 @@ let db=fs.existsSync(DB)?JSON.parse(fs.readFileSync(DB)):{
  {id:id(),name:'Parent Demo',email:'parent@ambotavo.school',phone:'254700000003',role:'parent',pw:H('Parent123!')}],
  posts:[{id:id(),title:'Welcome to AmboTavo',body:'Our first updates will appear here. Teachers can share notes, photos and videos with families.',kind:'note',media:'',author:'AmboTavo team',at:Date.now()}],enquiries:[]};
 const save=()=>{const tmp=DB+'.tmp';fs.writeFileSync(tmp,JSON.stringify(db,null,1));fs.renameSync(tmp,DB)};
-if(!fs.existsSync(DB))save();
+const NEWC={gallery:'',img_buses:'',busTitle:'Safe school transport',busText:'Our school buses carry the AmboTavo Kindergarten name and bring children to and from school. Ask us about routes and pick-up times.'};
+for(const k in NEWC)if(!(k in db.content))db.content[k]=NEWC[k];
+save();
 const sess=new Map(),otps=new Map();
 const SESSION_MS=1000*60*60*12;
 const cleanSession=()=>{const now=Date.now();for(const [k,v] of sess)if(v.exp<now)sess.delete(k)};
@@ -57,7 +59,9 @@ http.createServer(async(q,s)=>{
   const need=(...r)=>{if(!me||(r.length&&!r.includes(me.role))){J(me?403:401,{error:'Not allowed'});return false}return true};
   const m=q.method,raw=['POST','PUT'].includes(m)&&p!=='/api/upload'?await body(q,1e6):null,b=raw&&raw.length?JSON.parse(raw):{};
   if(p==='/api/content'&&m==='GET')return J(200,db.content);
-  if(p==='/api/content'&&m==='PUT'){if(!need('admin'))return;Object.keys(db.content).forEach(k=>{if(k in b)db.content[k]=String(b[k])});save();return J(200,db.content)}
+  if(p==='/api/content'&&m==='PUT'){if(!need('admin'))return;const before=JSON.stringify(db.content);Object.keys(db.content).forEach(k=>{if(k in b)db.content[k]=String(b[k])});const after=JSON.stringify(db.content);
+   for(const mm of before.matchAll(/\/uploads\/([\w-]+\.\w+)/g))if(!after.includes(mm[0])){try{fs.unlinkSync(path.join(D,'uploads',mm[1]))}catch{}}
+   save();return J(200,db.content)}
   if(p==='/api/login'){if(!rateLimit(q.socket.remoteAddress||'unknown'))return J(429,{error:'Too many login attempts. Please wait and try again.'});const x=db.users.find(v=>v.email.toLowerCase()===String(b.email||'').toLowerCase());
    if(!x||!chk(String(b.password||''),x.pw))return J(401,{error:'Wrong email or password'});const t=id();sess.set(t,{user:pub(x),exp:Date.now()+SESSION_MS});return J(200,{token:t,user:pub(x)})}
   if(p==='/api/otp/request'){if(!rateLimit(q.socket.remoteAddress||'unknown',15*60*1000,8))return J(429,{error:'Too many code requests. Please wait and try again.'});const ph=norm(b.phone),x=db.users.find(v=>norm(v.phone)===ph);

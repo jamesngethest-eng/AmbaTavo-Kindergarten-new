@@ -10,7 +10,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const say=(id,t,bad)=>{const e=$('#'+id);e.textContent=t;e.className='msg '+(bad?'err':'okc')};
 function out(){localStorage.removeItem('tk');location.reload()}$('#out').onclick=out;
 async function boot(){try{U=await api('me');C=await (await fetch('/api/content')).json();$('#who').textContent=U.name+' ('+U.role+')';$('#out').hidden=false;
- U.role==='admin'?admin():U.role==='teacher'?teacher():parent()}catch{login()}}
+ U.role==='admin'?location.replace('/admin.html'):U.role==='teacher'?teacher():parent()}catch{login()}}
 function login(){$('#app').innerHTML=`<div class="card" style="max-width:440px;margin:40px auto"><h2>Sign in</h2>
 <div class="tabs"><button class="btn on" id="t1">Password</button><button class="btn" id="t2">WhatsApp code</button></div>
 <form id="f1"><label for="e">Email</label><input id="e" type="email" required><label for="p">Password</label><input id="p" type="password" required><p><button class="btn">Sign in</button></p></form>
@@ -32,22 +32,5 @@ function wireComposer(){pf.onsubmit=async x=>{x.preventDefault();try{let m='',k=
  if(f){m=(await up(f)).url;k=f.type.startsWith('video')?'video':'image'}await api('posts','POST',{title:pt.value,body:pb.value,media:m,kind:k});pf.reset();say('pm2','Shared with families.');feed(true,$('#fd'))}catch(er){say('pm2',er.message,1)}};feed(true,$('#fd'))}
 const up=f=>fetch('/api/upload',{method:'POST',headers:{Authorization:'Bearer '+T,'x-filename':f.name},body:f}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);return d});
 function teacher(){$('#app').innerHTML='<h1>Teacher studio</h1>'+composer;wireComposer()}
-const LBL={name:'School name',tagline:'Tagline',heroTitle:'Homepage headline',heroText:'Homepage intro',aboutTitle:'About heading',aboutText:'About text',prog1t:'Programme 1 title',prog1x:'Programme 1 text',prog2t:'Programme 2 title',prog2x:'Programme 2 text',prog3t:'Programme 3 title',prog3x:'Programme 3 text',address:'Address',hours:'Opening hours',phone:'Phone (shown on site)',whatsapp:'WhatsApp number (digits only, with country code)',email:'Email',waGreeting:'WhatsApp pre-filled message',img_hero:'Homepage photo',img_about:'About photo',img_g1:'Gallery photo 1',img_g2:'Gallery photo 2',img_g3:'Gallery photo 3'};
-function admin(){$('#app').innerHTML=`<h1>School office</h1><div class="tabs">${['Website','Updates','Enquiries','Accounts'].map((t,i)=>`<button class="btn${i?'':' on'}" data-t="${t}">${t}</button>`).join('')}</div><div id="tab"></div>`;
- document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));({Website:site,Updates:upd,Enquiries:enq,Accounts:acc})[b.dataset.t]()});site()}
-function site(){$('#tab').innerHTML=`<form id="sf" class="grid2">${Object.keys(LBL).map(k=>k.startsWith('img_')?`<div><label>${LBL[k]}</label><div class="thumb" id="th_${k}" style="background-image:url('${esc(C[k])}')"></div><input type="file" accept="image/*" data-up="${k}"><input type="hidden" name="${k}" value="${esc(C[k])}"></div>`
- :`<div><label for="s_${k}">${LBL[k]}</label>${/Text|x$|Greeting/.test(k)?`<textarea id="s_${k}" name="${k}" rows="3">${esc(C[k])}</textarea>`:`<input id="s_${k}" name="${k}" value="${esc(C[k])}">`}</div>`).join('')}
-<div style="grid-column:1/-1"><p><button class="btn">Save changes to the website</button> <a class="btn ghost" href="/" target="_blank">View site</a></p><p class="msg" id="sm" role="status"></p></div></form>`;
- document.querySelectorAll('[data-up]').forEach(i=>i.onchange=async()=>{try{const d=await up(i.files[0]);sf.elements[i.dataset.up].value=d.url;$('#th_'+i.dataset.up).style.backgroundImage=`url('${d.url}')`;say('sm','Photo uploaded. Press Save to publish it.')}catch(er){say('sm',er.message,1)}});
- sf.onsubmit=async x=>{x.preventDefault();try{C=await api('content','PUT',Object.fromEntries(new FormData(sf)));say('sm','Saved. Your website is updated.')}catch(er){say('sm',er.message,1)}}}
-function upd(){$('#tab').innerHTML=composer;wireComposer()}
-async function enq(){const l=await api('enquiries');$('#tab').innerHTML=`<h2>Enquiries (${l.length})</h2>`+(l.map(e=>`<div class="row"><div><b>${esc(e.name)}</b> · ${esc(e.contact)}<br>${esc(e.message)}<div class="meta">${new Date(e.at).toLocaleString()}</div></div><button class="btn sm del" data-e="${e.id}">Delete</button></div>`).join('')||'<p>No enquiries yet.</p>');
- document.querySelectorAll('[data-e]').forEach(b=>b.onclick=async()=>{await api('enquiries/'+b.dataset.e,'DELETE');enq()})}
-async function acc(){const l=await api('users');$('#tab').innerHTML=`<h2>Accounts</h2>`+l.map(u=>`<div class="row"><div><b>${esc(u.name)}</b> · ${u.role}<br>${esc(u.email)} · WhatsApp ${esc(u.phone)}</div>${u.id===U.id?'':`<button class="btn sm del" data-u="${u.id}">Delete</button>`}</div>`).join('')+
-`<form class="card" id="uf" style="margin-top:20px"><h3>Add an account</h3><div class="grid2"><div><label for="un">Name</label><input id="un" required></div><div><label for="ue">Email</label><input id="ue" type="email" required></div>
-<div><label for="up">WhatsApp number</label><input id="up" placeholder="254700000000"></div><div><label for="ur">Role</label><select id="ur"><option>parent</option><option>teacher</option><option>admin</option></select></div>
-<div><label for="uw">Password (8+ characters)</label><input id="uw" type="password" minlength="8" required></div></div><p><button class="btn">Add account</button></p><p class="msg" id="um" role="status"></p></form>`;
- document.querySelectorAll('[data-u]').forEach(b=>b.onclick=async()=>{if(confirm('Delete this account?')){await api('users/'+b.dataset.u,'DELETE');acc()}});
- uf.onsubmit=async x=>{x.preventDefault();try{await api('users','POST',{name:un.value,email:ue.value,phone:up.value,role:ur.value,password:uw.value});acc()}catch(er){say('um',er.message,1)}}}
 boot();
 </script></body></html>
