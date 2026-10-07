@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="theme-color" content="#a91d22"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portal | AmboTavo Kindergarten</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=Young+Serif&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
+<header class="top"><a class="brand" href="/"><i></i>AmboTavo</a><div><span id="who"></span> <button class="btn sm ghost" id="cp" hidden>Change password</button> <button class="btn sm ghost" id="out" hidden>Sign out</button></div></header>
+<main class="wrap" id="app"></main>
+<dialog id="pd"><form id="pdf" class="card"><h3>Change password</h3><label for="p0">Current password (leave empty if you signed in with an email code)</label><input id="p0" type="password"><label for="p1">New password (8+ characters)</label><input id="p1" type="password" minlength="8" required><p><button class="btn">Save</button> <button class="btn ghost" type="button" id="pc">Cancel</button></p><p class="msg" id="pm3" role="status"></p></form></dialog>
+<script>
+const $=s=>document.querySelector(s);let T=localStorage.tk,U=null,C={};
+const api=async(p,m='GET',b)=>{const r=await fetch('/api/'+p,{method:m,headers:{Authorization:'Bearer '+T,...(b&&!(b instanceof Blob)?{'Content-Type':'application/json'}:{})},body:b instanceof Blob?b:b&&JSON.stringify(b)});
+ const d=await r.json();if(!r.ok){if(r.status===401&&U)out();throw new Error(d.error||'Error')}return d};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const say=(id,t,bad)=>{const e=$('#'+id);e.textContent=t;e.className='msg '+(bad?'err':'okc')};
+function out(){localStorage.removeItem('tk');location.reload()}$('#out').onclick=out;
+async function boot(){try{U=await api('me');C=await (await fetch('/api/content')).json();$('#who').textContent=U.name+' ('+U.role+')';$('#out').hidden=$('#cp').hidden=false;
+ U.role==='admin'?admin():U.role==='teacher'?teacher():parent()}catch{login()}}
+function login(){$('#app').innerHTML=`<div class="card" style="max-width:440px;margin:40px auto"><h2>Sign in</h2>
+<div class="tabs"><button class="btn on" id="t1">Password</button><button class="btn" id="t2">Email code</button></div>
+<form id="f1"><label for="e">Email</label><input id="e" type="email" required><label for="p">Password</label><input id="p" type="password" required><p><button class="btn">Sign in</button></p></form>
+<form id="f2" hidden><label for="ph">Your email</label><input id="ph" type="email" required><details><summary>First time here? Tell us about you</summary><label for="nm">Your name</label><input id="nm" autocomplete="name"><label for="nph">Phone / WhatsApp number</label><input id="nph" type="tel" placeholder="2547XXXXXXXX"></details><p><button class="btn">Email me a code</button></p><p class="meta">New? Just enter your email. Your account is created when you confirm the code.</p>
+<div id="cd" hidden><label for="cc">6-digit code</label><input id="cc" inputmode="numeric" maxlength="6"><p><button class="btn" type="button" id="vb">Verify and sign in</button></p></div></form><p class="msg" id="lm" role="status"></p></div>`;
+ $('#t1').onclick=()=>{f1.hidden=false;f2.hidden=true;t1.classList.add('on');t2.classList.remove('on')};$('#t2').onclick=()=>{f2.hidden=false;f1.hidden=true;t2.classList.add('on');t1.classList.remove('on')};
+ const done=d=>{if(d.pending)return say('lm',d.message);localStorage.tk=T=d.token;boot()};
+ f1.onsubmit=async x=>{x.preventDefault();try{done(await api('login','POST',{email:e.value,password:p.value}))}catch(er){say('lm',er.message,1)}};
+ f2.onsubmit=async x=>{x.preventDefault();try{const d=await api('otp/request','POST',{email:ph.value,name:nm.value,phone:nph.value});cd.hidden=false;say('lm',d.message)}catch(er){say('lm',er.message,1)}};
+ vb.onclick=async()=>{try{done(await api('otp/verify','POST',{email:ph.value,code:cc.value}))}catch(er){say('lm',er.message,1)}}}
+const postCard=(p,can)=>`<article class="card post"><div class="meta">${new Date(p.at).toLocaleDateString()} · ${esc(p.author)}</div><h3>${esc(p.title)}</h3><p>${esc(p.body)}</p>
+${p.media?(p.kind==='video'?`<video controls src="${esc(p.media)}"></video>`:`<img alt="" src="${esc(p.media)}">`):''}${can?`<button class="btn sm del" data-del="${p.id}">Remove</button>`:''}</article>`;
+async function feed(can,el){const ps=await api('posts');el.innerHTML=ps.map(p=>postCard(p,can&&(U.role==='admin'||p.author===U.name))).join('')||'<p>No updates yet.</p>';
+ el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(confirm('Remove this update?')){await api('posts/'+b.dataset.del,'DELETE');feed(can,el)}})}
+function parent(){$('#app').innerHTML='<h1>News from the classroom</h1><div id="fd"></div>';feed(false,$('#fd'))}
+const composer=`<form class="card" id="pf"><h3>Share an update</h3><label for="pt">Title</label><input id="pt" required maxlength="120"><label for="pb">Message</label><textarea id="pb" rows="3"></textarea>
+<label for="pm">Photo or video (optional)</label><input id="pm" type="file" accept="image/*,video/*"><p><button class="btn">Share with families</button></p><p class="msg" id="pm2" role="status"></p></form><div id="fd" style="margin-top:20px"></div>`;
+function wireComposer(){pf.onsubmit=async x=>{x.preventDefault();try{let m='',k='note',f=pm.files[0];
+ if(f){m=(await up(f)).url;k=f.type.startsWith('video')?'video':'image'}await api('posts','POST',{title:pt.value,body:pb.value,media:m,kind:k});pf.reset();say('pm2','Shared with families.');feed(true,$('#fd'))}catch(er){say('pm2',er.message,1)}};feed(true,$('#fd'))}
+const up=f=>fetch('/api/upload',{method:'POST',headers:{Authorization:'Bearer '+T,'x-filename':f.name},body:f}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);return d});
+function teacher(){$('#app').innerHTML='<h1>Teacher studio</h1>'+composer;wireComposer()}
+const LBL={name:'School name',tagline:'Tagline',heroTitle:'Homepage headline',heroText:'Homepage intro',aboutTitle:'About heading',aboutText:'About text',prog1t:'Programme 1 title',prog1x:'Programme 1 text',prog2t:'Programme 2 title',prog2x:'Programme 2 text',prog3t:'Programme 3 title',prog3x:'Programme 3 text',address:'Address',hours:'Opening hours',phone:'Phone (shown on site)',whatsapp:'WhatsApp number (digits only, with country code)',email:'Email',waGreeting:'WhatsApp pre-filled message',autoApprove:'Approve new sign-ups automatically',img_hero:'Homepage photo',img_about:'About photo',img_g1:'Gallery photo 1',img_g2:'Gallery photo 2',img_g3:'Gallery photo 3'};
+function admin(){$('#app').innerHTML=`<h1>School office</h1><div class="tabs">${['Website','Updates','Enquiries','Accounts'].map((t,i)=>`<button class="btn${i?'':' on'}" data-t="${t}">${t}</button>`).join('')}</div><div id="tab"></div>`;
+ document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));({Website:site,Updates:upd,Enquiries:enq,Accounts:acc})[b.dataset.t]()});site()}
+function site(){$('#tab').innerHTML=`<form id="sf" class="grid2">${Object.keys(LBL).map(k=>k.startsWith('img_')?`<div><label>${LBL[k]}</label><div class="thumb" id="th_${k}" style="background-image:url('${esc(C[k])}')"></div><input type="file" accept="image/*" data-up="${k}"><input type="hidden" name="${k}" value="${esc(C[k])}"></div>`
+ :`<div><label for="s_${k}">${LBL[k]}</label>${k==='autoApprove'?`<select id="s_${k}" name="${k}"><option value="no"${C[k]!=='yes'?' selected':''}>No, I approve each new person</option><option value="yes"${C[k]==='yes'?' selected':''}>Yes, approve automatically</option></select>`:/Text|x$|Greeting/.test(k)?`<textarea id="s_${k}" name="${k}" rows="3">${esc(C[k])}</textarea>`:`<input id="s_${k}" name="${k}" value="${esc(C[k])}">`}</div>`).join('')}
+<div style="grid-column:1/-1"><p><button class="btn">Save changes to the website</button> <a class="btn ghost" href="/" target="_blank">View site</a></p><p class="msg" id="sm" role="status"></p></div></form>`;
+ document.querySelectorAll('[data-up]').forEach(i=>i.onchange=async()=>{try{const d=await up(i.files[0]);sf.elements[i.dataset.up].value=d.url;$('#th_'+i.dataset.up).style.backgroundImage=`url('${d.url}')`;say('sm','Photo uploaded. Press Save to publish it.')}catch(er){say('sm',er.message,1)}});
+ sf.onsubmit=async x=>{x.preventDefault();try{C=await api('content','PUT',Object.fromEntries(new FormData(sf)));say('sm','Saved. Your website is updated.')}catch(er){say('sm',er.message,1)}}}
+function upd(){$('#tab').innerHTML=composer;wireComposer()}
+async function enq(){const l=await api('enquiries');$('#tab').innerHTML=`<h2>Enquiries (${l.length})</h2>`+(l.map(e=>`<div class="row"><div><b>${esc(e.name)}</b> · ${esc(e.contact)}<br>${esc(e.message)}<div class="meta">${new Date(e.at).toLocaleString()}</div></div><button class="btn sm del" data-e="${e.id}">Delete</button></div>`).join('')||'<p>No enquiries yet.</p>');
+ document.querySelectorAll('[data-e]').forEach(b=>b.onclick=async()=>{await api('enquiries/'+b.dataset.e,'DELETE');enq()})}
+async function acc(){const l=await api('users');$('#tab').innerHTML=`<h2>Accounts</h2>`+l.map(u=>`<div class="row"><div><b>${esc(u.name)}</b> · ${u.role}${u.approved?'':' <mark>waiting for approval</mark>'}<br>${esc(u.email)}${u.phone?' · '+esc(u.phone):''}</div><div>${u.approved?'':`<button class="btn sm" data-a="${u.id}">Approve</button> `}<button class="btn sm ghost" data-r="${u.id}">Reset password</button> ${u.id===U.id?'':`<button class="btn sm del" data-u="${u.id}">Delete</button>`}</div></div>`).join('')+
+`<form class="card" id="uf" style="margin-top:20px"><h3>Add an account</h3><div class="grid2"><div><label for="un">Name</label><input id="un" required></div><div><label for="ue">Email</label><input id="ue" type="email" required></div>
+<div><label for="up">Phone (optional)</label><input id="up" placeholder="254700000000"></div><div><label for="ur">Role</label><select id="ur"><option>parent</option><option>teacher</option><option>admin</option></select></div>
+<div><label for="uw">Password (8+ characters)</label><input id="uw" type="password" minlength="8" required></div></div><p><button class="btn">Add account</button></p><p class="msg" id="um" role="status"></p></form>`;
+ document.querySelectorAll('[data-u]').forEach(b=>b.onclick=async()=>{if(confirm('Delete this account?')){await api('users/'+b.dataset.u,'DELETE');acc()}});
+ document.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{await api('users/'+b.dataset.a+'/approve','POST');acc()});
+ document.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{const w=prompt('New password for this person (8 or more characters)');if(w)try{await api('password','POST',{userId:b.dataset.r,password:w});alert('Password changed.')}catch(er){alert(er.message)}});
+ uf.onsubmit=async x=>{x.preventDefault();try{await api('users','POST',{name:un.value,email:ue.value,phone:up.value,role:ur.value,password:uw.value});acc()}catch(er){say('um',er.message,1)}}}
+cp.onclick=()=>{pdf.reset();pm3.textContent='';pd.showModal()};pc.onclick=()=>pd.close();
+pdf.onsubmit=async x=>{x.preventDefault();try{await api('password','POST',{current:p0.value,password:p1.value});say('pm3','Password changed.');setTimeout(()=>pd.close(),900)}catch(er){say('pm3',er.message,1)}};
+boot();
+</script></body></html>
